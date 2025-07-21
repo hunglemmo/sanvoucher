@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Săn Voucher - Đổi Thưởng</string>
+    <string name="title_activity_main">Săn Voucher - Đổi Thưởng</string>
+    <string name="package_name">com.hunglemmo.sanvoucher.rewards</string>
+    <string name="custom_url_scheme">com.hunglemmo.sanvoucher.rewards</string>
+    <string name="server_client_id">991037706084-dhjn52nv5tpjnsesjhnd2th22guppopb.apps.googleusercontent.com</string>
+</resources>
