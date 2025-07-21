@@ -6,8 +6,9 @@ import { AdMob } from '@capacitor-community/admob';
 // Import các thư viện Google Auth và Capacitor
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { Capacitor } from '@capacitor/core';
-// SỬA LẠI: Dùng thư viện GoogleSignIn mới
-import { GoogleSignIn } from '@capacitor-community/google-sign-in';
+// SỬA LẠI: Dùng thư viện @capgo/capacitor-social-login
+import { SocialLogin } from '@capgo/capacitor-social-login';
+
 
 // --- Helper Functions & SVG Icons ---
 const formatCurrency = (number) => {
@@ -36,81 +37,38 @@ const ProductCard = ({ product }) => {
     const originalPrice = Number(product.price_old) || (salePrice > 0 ? salePrice * 1.25 : 0);
     const discountPercentage = originalPrice > 0 && salePrice > 0 ? Math.round(((originalPrice - salePrice) / originalPrice) * 100) : 0;
     const commissionRate = parseFloat(product.commission) / 100 || 0.02;
-    const coinReward = Math.floor((salePrice * commissionRate) / 10); // Tỷ lệ đổi xu mới
+    const coinReward = Math.floor((salePrice * commissionRate) / 10);
     let platformName = 'Khác';
     if (product.domain) {
         if (product.domain.includes('shopee')) platformName = 'Shopee';
         else if (product.domain.includes('lazada')) platformName = 'Lazada';
         else if (product.domain.includes('tiki')) platformName = 'Tiki';
     }
-    const mappedProduct = {
-        name: product.content || product.name,
-        imageUrl: product.image || product.imageUrl,
-        salePrice: salePrice,
-        affiliateUrl: product.link || product.affiliateUrl,
-        soldCount: product.sold_count || Math.floor(Math.random() * 1000) + 50,
-        platform: platformName,
-    };
-    return (
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden flex flex-col relative border border-gray-100 transition-shadow hover:shadow-lg">
-            {discountPercentage > 0 && (
-                <div className="absolute top-0 right-0 bg-yellow-300 text-yellow-800 text-xs font-bold px-2 py-1 rounded-bl-lg z-10">
-                    - {discountPercentage}%
-                </div>
-            )}
-            <a href={mappedProduct.affiliateUrl} target="_blank" rel="noopener noreferrer">
-                <img src={mappedProduct.imageUrl} alt={mappedProduct.name} className="w-full h-40 object-cover" />
-            </a>
-            <div className="p-2 flex flex-col flex-grow">
-                <p className="text-sm text-gray-800 flex-grow mb-2 h-14 overflow-hidden" title={mappedProduct.name}>
-                    {mappedProduct.name}
-                </p>
-                <div className="mt-auto">
-                    <p className="text-lg font-bold text-red-600 h-7">{formatCurrency(mappedProduct.salePrice)}</p>
-                    {coinReward > 0 && (
-                        <p className="text-xs text-green-600 font-semibold my-1">✨ Nhận đến {coinReward} xu</p>
-                    )}
-                    <div className="flex justify-between items-center text-xs text-gray-500 mt-1">
-                        <span>Đã bán {mappedProduct.soldCount > 1000 ? (mappedProduct.soldCount / 1000).toFixed(1) + 'k' : mappedProduct.soldCount}</span>
-                        <span className="font-semibold px-2 py-1 bg-gray-200 text-gray-700 rounded">{mappedProduct.platform}</span>
-                    </div>
-                    <a href={mappedProduct.affiliateUrl} target="_blank" rel="noopener noreferrer" className="block w-full mt-2 bg-blue-500 hover:bg-blue-600 text-white text-center text-sm font-bold py-2 px-4 rounded-lg transition">
-                        Mua Ngay
-                    </a>
-                </div>
-            </div>
-        </div>
-    );
+    const mappedProduct = { name: product.content || product.name, imageUrl: product.image || product.imageUrl, salePrice: salePrice, affiliateUrl: product.link || product.affiliateUrl, soldCount: product.sold_count || Math.floor(Math.random() * 1000) + 50, platform: platformName, };
+    return (<div className="bg-white rounded-lg shadow-sm overflow-hidden flex flex-col relative border border-gray-100 transition-shadow hover:shadow-lg">{discountPercentage > 0 && (<div className="absolute top-0 right-0 bg-yellow-300 text-yellow-800 text-xs font-bold px-2 py-1 rounded-bl-lg z-10">- {discountPercentage}%</div>)}<a href={mappedProduct.affiliateUrl} target="_blank" rel="noopener noreferrer"><img src={mappedProduct.imageUrl} alt={mappedProduct.name} className="w-full h-40 object-cover" /></a><div className="p-2 flex flex-col flex-grow"><p className="text-sm text-gray-800 flex-grow mb-2 h-14 overflow-hidden" title={mappedProduct.name}>{mappedProduct.name}</p><div className="mt-auto"><p className="text-lg font-bold text-red-600 h-7">{formatCurrency(mappedProduct.salePrice)}</p>{coinReward > 0 && (<p className="text-xs text-green-600 font-semibold my-1">✨ Nhận đến {coinReward} xu</p>)}<div className="flex justify-between items-center text-xs text-gray-500 mt-1"><span>Đã bán {mappedProduct.soldCount > 1000 ? (mappedProduct.soldCount / 1000).toFixed(1) + 'k' : mappedProduct.soldCount}</span><span className="font-semibold px-2 py-1 bg-gray-200 text-gray-700 rounded">{mappedProduct.platform}</span></div><a href={mappedProduct.affiliateUrl} target="_blank" rel="noopener noreferrer" className="block w-full mt-2 bg-blue-500 hover:bg-blue-600 text-white text-center text-sm font-bold py-2 px-4 rounded-lg transition">Mua Ngay</a></div></div></div>);
 };
 
 const RedemptionModal = ({ onClose, userCoins, showNotification, onRedemptionSuccess, backendUrl }) => {
-    // ... nội dung không đổi
-    const [cardType, setCardType] = useState('Viettel');
-    const [amount, setAmount] = useState(10000);
-    const [isLoading, setIsLoading] = useState(false);
-    const cardOptions = [{ value: 10000, label: '10,000đ', coins: 1000 }, { value: 20000, label: '20,000đ', coins: 2000 }, { value: 50000, label: '50,000đ', coins: 5000 }, { value: 100000, label: '100,000đ', coins: 10000 },];
-    const handleSubmit = async (e) => { e.preventDefault(); const requiredCoins = cardOptions.find(opt => opt.value === amount)?.coins || 0; if (userCoins < requiredCoins) { showNotification("Số xu của bạn không đủ.", 'error'); return; } setIsLoading(true); try { const token = localStorage.getItem('authToken'); if (!token) throw new Error("Vui lòng đăng nhập lại."); const response = await fetch(`${backendUrl}/api/redeem-card`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ cardType, amount }), }); const result = await response.json(); if (!response.ok || !result.success) { throw new Error(result.message || 'Có lỗi xảy ra.'); } showNotification(result.message, 'success'); onRedemptionSuccess(result.newCoins); onClose(); } catch (error) { showNotification(error.message, 'error'); } finally { setIsLoading(false); } };
+    const [cardType, setCardType] = useState('Viettel'); const [amount, setAmount] = useState(10000); const [isLoading, setIsLoading] = useState(false); const cardOptions = [{ value: 10000, label: '10,000đ', coins: 1000 }, { value: 20000, label: '20,000đ', coins: 2000 }, { value: 50000, label: '50,000đ', coins: 5000 }, { value: 100000, label: '100,000đ', coins: 10000 },]; const handleSubmit = async (e) => { e.preventDefault(); const requiredCoins = cardOptions.find(opt => opt.value === amount)?.coins || 0; if (userCoins < requiredCoins) { showNotification("Số xu của bạn không đủ.", 'error'); return; } setIsLoading(true); try { const token = localStorage.getItem('authToken'); if (!token) throw new Error("Vui lòng đăng nhập lại."); const response = await fetch(`${backendUrl}/api/redeem-card`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ cardType, amount }), }); const result = await response.json(); if (!response.ok || !result.success) { throw new Error(result.message || 'Có lỗi xảy ra.'); } showNotification(result.message, 'success'); onRedemptionSuccess(result.newCoins); onClose(); } catch (error) { showNotification(error.message, 'error'); } finally { setIsLoading(false); } };
     return (<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40" onClick={onClose}><div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm mx-4" onClick={e => e.stopPropagation()}><h3 className="text-xl font-bold text-center mb-4">Đổi Thẻ Cào</h3><p className="text-center text-sm text-gray-600 mb-4">Thẻ sẽ được trả trong mục "Lịch sử" trong vòng 24 giờ.</p><form onSubmit={handleSubmit} className="space-y-4"><div><label className="block text-sm font-medium text-gray-700">Chọn nhà mạng</label><select value={cardType} onChange={e => setCardType(e.target.value)} className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm"><option>Viettel</option><option>MobiFone</option><option>VinaPhone</option><option>Vietnamobile</option></select></div><div><label className="block text-sm font-medium text-gray-700">Chọn mệnh giá</label><select value={amount} onChange={e => setAmount(Number(e.target.value))} className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm">{cardOptions.map(opt => (<option key={opt.value} value={opt.value}>{opt.label} (Cần {opt.coins} xu)</option>))}</select></div><p className="text-xs text-gray-500 mt-1">Số dư của bạn: {userCoins} xu</p><button type="submit" className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 rounded-lg transition disabled:bg-gray-400" disabled={isLoading}>{isLoading ? 'Đang gửi...' : 'Xác nhận đổi'}</button></form></div></div>);
 };
 
 const RedemptionHistoryPage = ({ showNotification, backendUrl }) => {
-    // ... nội dung không đổi
     const [history, setHistory] = useState([]); const [isLoading, setIsLoading] = useState(true); useEffect(() => { const fetchHistory = async () => { setIsLoading(true); try { const token = localStorage.getItem('authToken'); if (!token) throw new Error("Vui lòng đăng nhập lại."); const response = await fetch(`${backendUrl}/api/redemption-history`, { headers: { 'Authorization': `Bearer ${token}` } }); const result = await response.json(); if (!result.success) throw new Error(result.message); setHistory(result.data); } catch (error) { showNotification(error.message, 'error'); } finally { setIsLoading(false); } }; fetchHistory(); }, [showNotification, backendUrl]); const copyToClipboard = (text) => { navigator.clipboard.writeText(text); showNotification('Đã sao chép!', 'success'); };
     return (<div className="p-4"><h2 className="text-2xl font-bold mb-4 text-center">Lịch sử đổi thưởng</h2>{isLoading ? <p className="text-center">Đang tải...</p> : (<div className="space-y-4">{history.length === 0 ? <p className="text-center text-gray-500">Bạn chưa có lịch sử đổi thưởng nào.</p> : history.map(item => (<div key={item._id} className="bg-white p-4 rounded-lg shadow"><div className="flex justify-between items-center mb-2"><span className="font-bold">{item.cardType} - {formatCurrency(item.amount)}</span><span className={`px-2 py-1 text-xs font-semibold rounded-full ${item.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>{item.status === 'pending' ? 'Đang xử lý' : 'Thành công'}</span></div><p className="text-sm text-gray-500 mb-2">Ngày: {new Date(item.createdAt).toLocaleString('vi-VN')}</p>{item.status === 'completed' && item.cardCode && (<div className="bg-gray-100 p-2 rounded mt-2"><p className="text-sm">Mã thẻ: <strong className="font-mono">{item.cardCode}</strong> <button onClick={() => copyToClipboard(item.cardCode)} className="text-blue-500 text-xs ml-2">[SAO CHÉP]</button></p><p className="text-sm">Seri: <strong className="font-mono">{item.cardSerial}</strong> <button onClick={() => copyToClipboard(item.cardSerial)} className="text-blue-500 text-xs ml-2">[SAO CHÉP]</button></p></div>)}</div>))}</div>)}</div>);
 };
 
 
 const LoginPage = ({ onLogin, showNotification, backendUrl }) => {
-    // ... nội dung không đổi
     const [isLoginView, setIsLoginView] = useState(true); const [username, setUsername] = useState(''); const [password, setPassword] = useState(''); const [confirmPassword, setConfirmPassword] = useState(''); const [referralCode, setReferralCode] = useState(''); const [isLoading, setIsLoading] = useState(false); const handleAuthAction = async () => { setIsLoading(true); try { let response; let result; if (isLoginView) { response = await fetch(`${backendUrl}/api/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }), }); result = await response.json(); if (!response.ok || !result.success) { throw new Error(result.message || 'Đăng nhập thất bại.'); } showNotification(result.message, 'success'); onLogin(result); } else { if (password !== confirmPassword) { throw new Error('Mật khẩu nhập lại không khớp.'); } response = await fetch(`${backendUrl}/api/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password, referralCode }), }); result = await response.json(); if (!response.ok || !result.success) { throw new Error(result.message || 'Đăng ký thất bại.'); } showNotification(result.message, 'success'); setIsLoginView(true); } } catch (error) { showNotification(error.message, 'error'); } finally { setIsLoading(false); } }; const handleGoogleSuccess = async (token) => { setIsLoading(true); try { const res = await fetch(`${backendUrl}/api/auth/google`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: token }), }); const data = await res.json(); if (!res.ok || !data.success) { throw new Error(data.message || 'Đăng nhập Google thất bại'); } showNotification('Đăng nhập Google thành công!', 'success'); onLogin(data); } catch (err) { showNotification(err.message, 'error'); } finally { setIsLoading(false); } };
     
-    // SỬA LẠI: handleNativeGoogleLogin để dùng GoogleSignIn
+    // SỬA LẠI: handleNativeGoogleLogin để dùng SocialLogin
     const handleNativeGoogleLogin = async () => {
         setIsLoading(true);
         try {
-            const googleUser = await GoogleSignIn.signIn();
-            if (googleUser && googleUser.idToken) {
-                handleGoogleSuccess(googleUser.idToken);
+            const result = await SocialLogin.signIn();
+            if (result && result.token) {
+                handleGoogleSuccess(result.token);
             } else {
                 throw new Error("Không nhận được thông tin người dùng từ Google.");
             }
@@ -191,8 +149,6 @@ export default function App() {
     const [coins, setCoins] = useState(0);
     const [notification, setNotification] = useState({ message: '', show: false, type: 'info' });
     const [canClaimBonus, setCanClaimBonus] = useState(false);
-    // XÓA BỎ: isAdVisible
-    // const [isAdVisible, setIsAdVisible] = useState(false);
     const [isRedemptionVisible, setIsRedemptionVisible] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -204,8 +160,8 @@ export default function App() {
 
     useEffect(() => {
         if (Capacitor.isNativePlatform()) {
-            // SỬA LẠI: Dùng GoogleSignIn
-            GoogleSignIn.initialize();
+            // SỬA LẠI: Không cần initialize SocialLogin
+            // SocialLogin.initialize();
             // THÊM MỚI: Khởi tạo AdMob
             AdMob.initialize({ requestTrackingAuthorization: true });
         }
@@ -242,7 +198,6 @@ export default function App() {
     }, [backendUrl]);
 
     const loadMoreProducts = async () => {
-        // ... nội dung không đổi
         if (isLoadingMore || !hasMore) return;
         setIsLoadingMore(true);
         const nextPage = page + 1;
@@ -276,8 +231,8 @@ export default function App() {
 
     const handleLogout = () => {
         if (Capacitor.isNativePlatform()) {
-            // SỬA LẠI: Dùng GoogleSignIn
-            GoogleSignIn.signOut();
+            // SỬA LẠI: Dùng SocialLogin
+            SocialLogin.signOut();
         }
         localStorage.removeItem('authToken');
         setIsAuthenticated(false);
@@ -288,7 +243,6 @@ export default function App() {
     };
 
     const handleDailyLogin = async () => {
-        // ... nội dung không đổi
         if (!canClaimBonus || !currentUser) return;
         try {
             const token = localStorage.getItem('authToken');
@@ -304,8 +258,6 @@ export default function App() {
         }
     };
 
-    // --- THÊM MỚI / SỬA LẠI TOÀN BỘ LOGIC QUẢNG CÁO ---
-
     const grantAdReward = async (amount) => {
         try {
             if (!currentUser) throw new Error("Bạn cần đăng nhập để thực hiện.");
@@ -317,15 +269,12 @@ export default function App() {
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ amountToAdd: amount }),
             });
-
             const result = await response.json();
             if (!response.ok || !result.success) {
                 throw new Error(result.message || 'Lỗi khi cộng xu.');
             }
-
             setCoins(result.newCoins);
             showNotification(`Bạn đã được cộng ${amount} xu!`, 'success');
-
         } catch (error) {
             showNotification(error.message, 'error');
         }
@@ -336,7 +285,7 @@ export default function App() {
         setIsAdLoading(true);
 
         const options = {
-            adId: 'ca-app-pub-3940256099942544/5224354917', 
+            adId: 'ca-app-pub-3940256099942544/5224354917', // ID test
             isTesting: true,
         };
 
@@ -344,6 +293,7 @@ export default function App() {
             AdMob.removeAllListeners();
             AdMob.addListener('onRewarded', (reward) => {
                 console.log('Ad reward received:', reward);
+                // SỬA LẠI: Cộng 5 xu theo như text trên nút
                 grantAdReward(5);
             });
             AdMob.addListener('onAdDismissed', () => {
@@ -363,7 +313,6 @@ export default function App() {
     };
     
     const handleShareReferral = async (code) => {
-        // ... nội dung không đổi
         const shareData = { title: "Mời bạn săn sale", text: `Nhận ngàn deal hot và tích xu đổi quà. Nhập mã giới thiệu của mình: ${code}`, url: "https://play.google.com/store/apps/details?id=com.hunglemmo.sanvoucher.rewards", };
         try {
             if (navigator.share) { await navigator.share(shareData); } else { throw new Error('Web Share API not supported.'); }
@@ -388,7 +337,7 @@ export default function App() {
                     user={currentUser} 
                     coins={coins} 
                     onDailyLogin={handleDailyLogin} 
-                    onWatchAd={handleShowRewardedAd} // SỬA LẠI: Gắn hàm mới
+                    onWatchAd={handleShowRewardedAd}
                     isAdLoading={isAdLoading}
                     onLogout={handleLogout} 
                     canClaimBonus={canClaimBonus}
@@ -417,9 +366,6 @@ export default function App() {
         <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
             <div className="bg-gray-100 min-h-screen font-sans">
                 <ToastNotification message={notification.message} type={notification.type} show={notification.show} />
-                
-                {/* XÓA BỎ: Component quảng cáo giả lập */}
-                {/* {isAdVisible && <AdSimulationModal onReward={handleAdReward} onClose={handleAdClose} />} */}
                 
                 {isRedemptionVisible && <RedemptionModal 
                     onClose={() => setIsRedemptionVisible(false)} 
