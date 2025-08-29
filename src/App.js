@@ -197,6 +197,45 @@ export default function App() {
         fetchInitialData();
     }, [backendUrl]);
 
+    // =================================================================
+    // START: SỬA LỖI NHẬN THƯỞNG HẰNG NGÀY
+    // =================================================================
+
+    // THÊM MỚI: Hàm kiểm tra trạng thái nhận thưởng từ server
+    const checkBonusStatus = async () => {
+        if (!isAuthenticated) return; // Chỉ kiểm tra khi đã đăng nhập
+        try {
+            const token = localStorage.getItem('authToken');
+            if (!token) return;
+
+            // Giả định bạn có endpoint này trên backend để kiểm tra
+            const response = await fetch(`${backendUrl}/api/user/status`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                if (result.success) {
+                    // Cập nhật lại state với dữ liệu mới nhất
+                    setCanClaimBonus(result.canClaimBonus);
+                }
+            }
+        } catch (error) {
+            console.error("Lỗi khi kiểm tra trạng thái nhận thưởng:", error);
+        }
+    };
+
+    // THÊM MỚI: useEffect để gọi kiểm tra khi chuyển sang trang Profile
+    useEffect(() => {
+        if (currentPage === 'profile') {
+            checkBonusStatus();
+        }
+    }, [currentPage]); // Chạy lại mỗi khi `currentPage` thay đổi
+
+    // =================================================================
+    // END: SỬA LỖI NHẬN THƯỞNG HẰNG NGÀY
+    // =================================================================
+
     const loadMoreProducts = async () => {
         if (isLoadingMore || !hasMore) return;
         setIsLoadingMore(true);
